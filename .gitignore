@@ -1,0 +1,6 @@
+# This repo tracks only harness/informational docs — not task work.
+# Ignore everything by default, then whitelist the curated docs.
+/*
+!.gitignore
+!CLAUDE.md
+!usage.md
