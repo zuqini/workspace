@@ -86,7 +86,7 @@ When I say "refresh task status" / "what's going on" / "summarize my tasks":
 
    | Task | Repo | Issue | Issue state | PR | PR state | Next step |
 
-   For a task with `lanes/`, put each lane's live state (`claude agents --json --cwd ~/workspace/<slug>`) and its latest `LOG.md` heading in Next step.
+   For a task with `lanes/`, put each lane's live state (`ListAgents`, or `claude agents --json --all --cwd ~/workspace/<slug>`) and its latest `LOG.md` heading in Next step.
 
 ## "What should I work on next?"
 
@@ -98,7 +98,7 @@ For non-trivial investigations or implementations, prefer launching a sub-agent 
 
 **Subagents or lanes.** One session with subagents is the default. When a task will run for hours or many review rounds, splits into independent workstreams that need their own worktrees, or I'd want to steer workstreams separately, run it as **lanes**: named, long-lived background sessions, one per workstream, each with a brief and a log under `<slug>/lanes/<lane>/`. The `lanes` skill has the protocol. Lanes report to you, never to each other, and never push or open PRs; you verify, integrate and hold the PR gate. Put the split (lanes, the paths each owns, acceptance checks) in `## Approach` before starting any; the mode rules in "Task lifecycle" decide whether you wait for my go.
 
-Don't rely on predicting length. In a task running on subagents, propose lanes when a review loop reaches round 3 with real findings still coming, you've corrected the same misunderstanding twice, you're about to make a second worktree for the task, or I redirect one part while another is in flight. Auto-compaction is the late backstop, not the signal to wait for. The `lanes` skill has the full list and how to switch without losing state.
+Don't rely on predicting length. In a task running on subagents, watch for the tripwires in the `lanes` skill (a third review round with real findings, a second worktree, me redirecting one part mid-flight) and propose lanes when one fires. The skill also covers switching without losing state.
 
 Whatever the topology, agents talk through files (TASK.md, briefs, logs, commits, beads), not conversation, and any agent must be restartable from those files.
 
@@ -114,7 +114,7 @@ For any task likely to outlive a single Claude session, treat **`TASK.md` as the
 
 1. Read `TASK.md`.
 2. In the `.tmp` worktree, run `git log --oneline $(git merge-base HEAD origin/HEAD)..HEAD` and `git diff $(git merge-base HEAD origin/HEAD)...HEAD --stat`.
-3. If `<slug>/lanes/` exists, you are its coordinator now: check live lanes with `claude agents --json --cwd ~/workspace/<slug>`, read each lane's latest `LOG.md` entry, and match them against the lane ids in TASK.md Status. Put your session name in each brief as coordinator.
+3. If `<slug>/lanes/` exists, you are its coordinator now: check live lanes with `ListAgents` (or `claude agents --json --all --cwd ~/workspace/<slug>`), read each lane's latest `LOG.md` entry, and match them against the lane ids in TASK.md Status. Put your session name and `[ref]` in each brief as coordinator.
 4. Compute the spec-vs-committed delta and continue from there. If the spec is unclear, ask before guessing — don't redo work that's already committed.
 
 **Before `/clear` (or when wrapping a session on an unfinished task):** update `TASK.md` *only* if something decided or learned in chat isn't already captured in the spec or the commits — e.g. "tried X, abandoned because Y", an `## Approach` pivot, a Status bullet for uncommitted partial work. **Do not write a per-step progress journal** — it drifts and starts lying. Commits + tests are the only honest signal of completeness.

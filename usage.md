@@ -36,7 +36,7 @@ How to drive the multi-tasking workflow defined in `./CLAUDE.md`.
 
 ## If you want more autonomy later
 
-Flip to `--dangerously-skip-permissions` when you're comfortable. Right now you keep confirmations.
+Flip to `--dangerously-skip-permissions` when you're comfortable. Right now you keep confirmations. With lanes running, a coordinator in bypass mode asks you to approve each lane's signal, since messages between bypass and prompting sessions are held by default; keep the coordinator in auto mode, or set `crossSessionInbound: "accept"` for it.
 
 ## A small nvim tip for the TASK.md loop
 
@@ -64,7 +64,7 @@ For big tasks Claude can run each workstream as a lane: a named background sessi
 
 - **See them:** `claude agents` (agent view). Lane ids are in TASK.md Status.
 - **Watch or steer one:** `claude attach <id>` (← goes back to agent view). To keep one on screen, attach it in a herdr pane. If you change direction while attached, ask the lane to log it as a DECISION. Better: edit its `BRIEF.md` and tell the coordinator, so a restarted lane knows too.
-- **When one is stuck:** a lane waiting on a permission prompt stays blocked until you attach and answer it. Moshi pages you as it does for any session.
+- **When one is stuck:** a lane waiting on a permission prompt stays blocked until you attach and answer it. Moshi pages you as it does for any session. A lane whose first log entry is BLOCKED "gates inactive" started without its push/PR guard; don't let it continue until that's fixed.
 - **Restarts are normal:** the coordinator restarts lanes from their files between milestones to keep their context fresh.
 - **Cloud:** for work that must keep going while the laptop sleeps, Claude Projects (claude.ai/code → Projects) gives you a cloud coordinator with threads; you start it there. Claude Tag (per-channel Slack agents) needs a Team or Enterprise plan.
 
@@ -76,6 +76,6 @@ For big tasks Claude can run each workstream as a lane: a named background sessi
 | `~/workspace/usage.md` | This file. |
 | `~/workspace/<slug>/` | One folder per task: `TASK.md` + `<repo>.tmp/` worktree(s). Not tracked in git. |
 | `~/workspace/<slug>/lanes/<lane>/` | A lane's `BRIEF.md` (coordinator writes) and `LOG.md` (lane writes). Its worktree is `<slug>/<repo>.<lane>.tmp/`. |
-| `~/dotfiles/claude/.claude/skills/lanes/` | Lane protocol: `SKILL.md` (coordinator), `worker.md` (lane), `brief-template.md`, `scripts/start-lane.sh`, `scripts/watch-lanes.py`, `scripts/lane-guard.py` (hook that blocks push/PR/`claude` in any spelling). |
+| `~/dotfiles/claude/.claude/skills/lanes/` | Lane protocol: `SKILL.md` (coordinator), `worker.md` (lane), `brief-template.md`, `scripts/start-lane.sh`, `scripts/watch-lanes.py`, `scripts/lane-guard.py` (hook that blocks push/PR/`claude` in any spelling) with `scripts/test_lane_guard.py`. |
 | `~/projects/<repo>` | Persistent clones. Claude never edits these directly; worktrees are spawned from them. |
 | `~/dotfiles/claude/.claude/CLAUDE.md` | Global personal rules (symlinked to `~/.claude/CLAUDE.md`). Points at the workspace workflow when CWD is `~/workspace/`. |
