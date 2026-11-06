@@ -61,9 +61,10 @@ Some clones under `~/projects/` are forks or third-party checkouts whose `origin
 
 Before creating a PR:
 
-1. `git fetch` + rebase on the latest default branch (`origin/HEAD`, or `upstream/HEAD` if the repo has an `upstream` remote).
-2. Run the repo's build / tests / lint (whatever the repo defines — check its README, Makefile, `package.json`, CI config); they must pass locally.
-3. **Always** show me the title and description and wait for confirmation before running `gh pr create`.
+1. Run the repo's build / tests / lint (whatever the repo defines — check its README, Makefile, `package.json`, CI config); they must pass locally.
+2. **Always** show me the title and description and wait for confirmation before running `gh pr create`.
+
+**Don't rebase reflexively.** Basing on the latest default branch is a *scaffolding-time* concern — the worktree is cut from `origin/HEAD` (or `upstream/HEAD`) when the task is created (see "Repo discovery"). Once a branch exists, only rebase when there's a reason: a conflict with the default branch, a CI failure it already fixed, or I ask. Rebasing a branch that's already pushed means a force-push, so it costs more than it looks.
 
 If the repo has both `upstream` and `origin` remotes: push the branch to `origin` but open the PR against `upstream`.
 
