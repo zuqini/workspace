@@ -49,7 +49,7 @@ For tasks that span multiple Claude sessions (context fills up, you `/clear`, or
 
 - **`TASK.md` = the spec** (what *should* be true when done)
 - **`git log` in the worktree = the progress log** (what's *actually* done)
-- The delta between them is the remaining work. Claude already knows to compute this on bootstrap (see `CLAUDE.md` → "Long-running tasks").
+- The delta between them is the remaining work. Claude already knows to compute this on bootstrap (the `workspace` skill → "Resume a task").
 
 **Bootstrap prompt to paste into the new session** (if Claude doesn't pick up the in-progress task on its own):
 
@@ -73,10 +73,11 @@ For big tasks Claude can run each workstream as a lane: a named background sessi
 
 | File | Purpose |
 |---|---|
-| `~/workspace/CLAUDE.md` | Multi-tasking workflow (task folders, `TASK.md` spec, worktrees, PR rules, status board, cleanup). Loads whenever you `cd` into `~/workspace/`. |
+| `~/workspace/CLAUDE.md` | Multi-tasking workflow (task folders, `TASK.md` spec, worktrees, PR rules). Loads whenever you `cd` into `~/workspace/`. |
+| `~/workspace/.claude/skills/workspace/` | On-demand procedures: status board, what to work on next, resuming a task, cleanup. Loads only when one is needed. |
 | `~/workspace/usage.md` | This file. |
 | `~/workspace/<slug>/` | One folder per task: `TASK.md` + `<repo>.tmp/` worktree(s). Not tracked in git. |
 | `~/workspace/<slug>/lanes/<lane>/` | A lane's `BRIEF.md` (coordinator writes) and `LOG.md` (lane writes). Its worktree is `<slug>/<repo>.<lane>.tmp/`. |
 | `~/dotfiles/claude/.claude/skills/lanes/` | Lane protocol: `SKILL.md` (coordinator), `worker.md` (lane), `brief-template.md`, `scripts/start-lane.sh`, `scripts/watch-lanes.py`, `scripts/lane-guard.py` (hook that blocks push/PR/`claude` in any spelling) with `scripts/test_lane_guard.py`. |
 | `~/projects/<repo>` | Persistent clones. Claude never edits these directly; worktrees are spawned from them. |
-| `~/dotfiles/claude/.claude/CLAUDE.md` | Global personal rules (symlinked to `~/.claude/CLAUDE.md`). Points at the workspace workflow when CWD is `~/workspace/`. |
+| `~/dotfiles/claude/.claude/CLAUDE.md` | Global personal rules (symlinked to `~/.claude/CLAUDE.md`). |

@@ -4,3 +4,6 @@
 !.gitignore
 !CLAUDE.md
 !usage.md
+!.claude/
+.claude/*
+!.claude/skills/

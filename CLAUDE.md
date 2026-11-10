@@ -1,138 +1,80 @@
 # Workspace: multi-tasking command center
 
-This folder is my task multiplexer. When I'm working here, I don't want to iterate line-by-line on code — I want you to manage a pipeline of tasks: scope them, isolate them in their own folders + worktrees, run them to completion (spec → commits → PR), and keep me out of the clone directories.
+This folder is my task multiplexer. Given a GitHub issue, bug report or verbal ask, take it from "here's the thing" to "there's a PR" without hand-holding, with each task isolated in its own folder and worktree(s) so many can run at once, and keep me out of the clone directories. Work spec-driven: I iterate on `TASK.md` in my editor and you one-shot the implementation from it. When something goes wrong, I'd rather fix the spec than iterate in chat.
 
-All repos I work on live under `~/projects/`.
+All repos I work on live under `~/projects/`. The `workspace` skill has the on-demand procedures: status board, what to work on next, resuming a task, cleanup.
 
-**If your launch prompt says you are a lane**, you are a worker, not the router: follow `~/.claude/skills/lanes/worker.md` and your `BRIEF.md`, and skip the task lifecycle, pull request, status board and cleanup sections below.
-
-## Goals
-
-- Higher-level asks, end-to-end. Given a GitHub issue / bug description / verbal ask, go from "here's the thing" to "there's a PR" without me having to hand-hold.
-- Each task is isolated in its own folder with its own worktree(s), so many tasks can run concurrently.
-- Prefer a **spec-driven** workflow: I iterate on `TASK.md` in my editor; you one-shot the implementation from it. If something goes wrong, I'd rather fix the spec than iterate with you in the prompt.
+**If your launch prompt says you are a lane**, you are a worker, not the router: follow `~/.claude/skills/lanes/worker.md` and your `BRIEF.md`, and skip the task lifecycle and pull request sections below.
 
 ## Task lifecycle
 
-When I say "let's work on <thing>" (GitHub issue URL, bug description, verbal ask):
+When I say "let's work on <thing>":
 
-1. **Slug** — invent a short kebab slug (e.g. `parser-timeout`). If there's a GitHub issue, suffix it with the number: `parser-timeout-42`.
-2. **Folder** — `mkdir ~/workspace/<slug>/`.
-3. **TASK.md** — delegate the initial scaffold to a sub-agent (keeps the top-level context clean for routing). The sub-agent writes `<slug>/TASK.md` with these sections:
-   - Always: `# <slug>`, `## Status` (Repo: `<name>`, Issue: URL / none, PR: none yet / URL), `## Goal` (one paragraph from the issue/source), `## Notes` (links to related issues, discussions, prior PRs, docs).
-   - Add `## Approach` only when it's load-bearing:
-     - If I said "scaffold only" / "just set up the task" — include an empty `## Approach` so I have a place to write the spec.
-     - If you're proceeding straight to implementation — include `## Approach` with a short plan before coding (useful for sub-agent handoff and later review).
-     - Otherwise, omit it.
-   - Enough context that a fresh agent can pick it up. Do **not** investigate root cause yet.
-4. **Worktree(s)** — figure out which repo(s) the task touches and create a git worktree per repo under `<slug>/`. See "Repo discovery" below. Naming convention: `<slug>/<repo>.tmp/`.
-5. **Decide mode:**
-   - If the ask is clearly scoped (an issue with a tight fix, a specific bug description, a well-defined change), continue straight into implementation. The PR-creation gate will still pause for me.
-   - If the ask is vague or exploratory, or if I said "just set up the task" / "scaffold only", stop here, summarize what you set up, and wait for me to flesh out `TASK.md` before saying "go" / "implement" / "run the spec".
-   - When genuinely unsure which bucket the ask falls into, ask once rather than guessing.
+1. **Slug**: a short kebab slug (`parser-timeout`), suffixed with the issue number if there is one (`parser-timeout-42`).
+2. **Folder**: `~/workspace/<slug>/`.
+3. **TASK.md** in it, with `# <slug>`, `## Status` (Repo, Issue URL or none, PR none yet or URL), `## Goal` (one paragraph from the source) and `## Notes` (related issues, discussions, prior PRs, docs). Add `## Approach` only when it's load-bearing:
+   - empty, if I said "scaffold only" or "just set up the task", so I have a place to write the spec;
+   - a short plan, if you're going straight to implementation.
+
+   Give a fresh agent enough context to pick it up, but don't investigate root cause yet.
+4. **Worktree(s)**: one per repo the task touches, at `<slug>/<repo>.tmp/` (see Repo discovery).
+5. **Mode**:
+   - Clearly scoped (a tight issue, a specific bug, a well-defined change): continue into implementation. The PR gate still pauses for me.
+   - Vague or exploratory, or I said "scaffold only": stop, summarize what you set up, and wait for me to flesh out `TASK.md` and say "go".
+   - Unsure which: ask once.
 
 ## Repo discovery
 
-All my clones live in `~/projects/`. To find the repo a task touches:
-
-- `ls ~/projects/` and match by name; if the name doesn't make it obvious, grep across the likely candidates.
-- Not every folder there is a git repo — check for `.git` before treating one as a target.
-- If none match, ask me before cloning anything new.
-
-Creating the worktree:
+Match the task to a repo under `~/projects/`; if none fits, ask before cloning anything. Create the worktree with:
 
 ```sh
 git -C ~/projects/<repo> fetch origin
 git -C ~/projects/<repo> worktree add ~/workspace/<slug>/<repo>.tmp -b <slug> origin/HEAD
 ```
 
-Don't assume the default branch is `main` — some repos use `master`. `origin/HEAD` resolves it; if it's unset, run `git remote set-head origin -a` first.
+`origin/HEAD` resolves the default branch (some repos use `master`); if it's unset, run `git remote set-head origin -a` first.
 
-Some clones under `~/projects/` are forks or third-party checkouts whose `origin` is not mine (`github.com/zuqini/...`). Check `git remote -v` before pushing. If `origin` isn't mine and there's no `upstream`/fork remote of mine, ask me how I want to handle it rather than pushing.
+Some clones are forks or third-party checkouts whose `origin` isn't mine (`github.com/zuqini/...`). Check `git remote -v` before pushing; if `origin` isn't mine and there's no fork remote of mine, ask how to handle it.
 
 ## Code changes
 
-- All edits happen in the `.tmp` worktree — **never** in the source clone directories under `~/projects/`. Those are my persistent checkouts; touching them causes conflicts across parallel tasks.
-- Small, semantically meaningful commits. Squash typos / fixups into the relevant parent commit rather than leaving them as separate commits.
-- Follow the repo's existing commit message style (`git log` in the worktree shows it).
-- Don't commit generated / lockfile churn unless the change actually requires it.
+- All edits happen in the `.tmp` worktree, never in the clones under `~/projects/`: those are my persistent checkouts, and touching them causes conflicts across parallel tasks.
+- Small, semantically meaningful commits. Squash typos and fixups into the commit they fix.
+- Don't commit generated or lockfile churn unless the change requires it.
 
 ## Pull requests
 
-Before creating a PR:
+Before creating a PR, run the repo's build, tests and lint; they must pass locally. Then show me the title and description and wait for my confirmation before `gh pr create`.
 
-1. Run the repo's build / tests / lint (whatever the repo defines — check its README, Makefile, `package.json`, CI config); they must pass locally.
-2. **Always** show me the title and description and wait for confirmation before running `gh pr create`.
+Don't rebase reflexively. The worktree is cut from the latest default branch when the task is created; after that, rebase only for a reason: a conflict with the default branch, a CI failure it already fixed, or I ask. Rebasing a pushed branch means a force-push, so it costs more than it looks.
 
-**Don't rebase reflexively.** Basing on the latest default branch is a *scaffolding-time* concern — the worktree is cut from `origin/HEAD` (or `upstream/HEAD`) when the task is created (see "Repo discovery"). Once a branch exists, only rebase when there's a reason: a conflict with the default branch, a CI failure it already fixed, or I ask. Rebasing a branch that's already pushed means a force-push, so it costs more than it looks.
+If the repo has both `upstream` and `origin`, push the branch to `origin` and open the PR against `upstream`.
 
-If the repo has both `upstream` and `origin` remotes: push the branch to `origin` but open the PR against `upstream`.
+Check PR state with `gh pr view <n> --json state,mergedAt,reviewDecision,statusCheckRollup` and `gh pr checks <n>` (authoritative CI status), never by reading bot comments.
 
-Checking PR state (use these exact commands — **do not** read bot comments to decide if checks passed):
-
-- `gh pr view <n> --json state,mergedAt,reviewDecision,statusCheckRollup`
-- `gh pr checks <n>` — authoritative CI status
-
-After a PR is created:
-- Show me the PR URL (and the issue URL, if any).
-- If there's a linked issue, make sure the PR body references it (`Closes #<n>`) so GitHub links them. Don't post separate issue comments unless I ask.
-
-## Task status board
-
-When I say "refresh task status" / "what's going on" / "summarize my tasks":
-
-1. Scan every `~/workspace/*/TASK.md`.
-2. Cross-check against live GitHub state (`gh issue view`, `gh pr view`). **TASK.md can drift** — treat GitHub as source of truth and update TASK.md if stale.
-3. Render a table:
-
-   | Task | Repo | Issue | Issue state | PR | PR state | Next step |
-
-   For a task with `lanes/`, put each lane's live state (`ListAgents`, or `claude agents --json --all --cwd ~/workspace/<slug>`) and its latest `LOG.md` heading in Next step.
-
-## "What should I work on next?"
-
-Look at: open issues across my repos (`gh issue list --repo zuqini/<repo>` / `gh search issues --owner zuqini --state open`), existing `~/workspace/*` tasks that are blocked or stale, and open PRs that need action (`gh search prs --author @me --state open`). Suggest 2–3 options ranked by priority / staleness / blocker status. Don't pick for me — just recommend.
+If there's a linked issue, the PR body says `Closes #<n>`. Don't post separate issue comments unless I ask.
 
 ## Delegation
 
-For non-trivial investigations or implementations, prefer launching subagents (investigate, implement, review with `/code-review`) rather than doing everything inline. This keeps the top-level context clean for task routing. To review and fix a PR until it's clean, use `/review-loop`.
+To review and fix a PR until it's clean, use `/review-loop`.
 
-**Subagents or lanes.** One session with subagents is the default. When a task will run for hours or many review rounds, splits into independent workstreams that need their own worktrees, or I'd want to steer workstreams separately, run it as **lanes**: named, long-lived background sessions, one per workstream, each with a brief and a log under `<slug>/lanes/<lane>/`. The `lanes` skill has the protocol. Lanes report to you, never to each other, and never push or open PRs; you verify, integrate and hold the PR gate. Put the split (lanes, the paths each owns, acceptance checks) in `## Approach` before starting any; the mode rules in "Task lifecycle" decide whether you wait for my go.
-
-Don't rely on predicting length. In a task running on subagents, watch for the tripwires in the `lanes` skill (a third review round with real findings, a second worktree, me redirecting one part mid-flight) and propose lanes when one fires. The skill also covers switching without losing state.
+**Subagents or lanes.** One session with subagents is the default. When a task will run for hours or many review rounds, splits into independent workstreams that need their own worktrees, or I'd want to steer workstreams separately, run it as **lanes**: named, long-lived background sessions, one per workstream, each with a brief and a log under `<slug>/lanes/<lane>/`. The `lanes` skill has the protocol, and the tripwires that say when to switch mid-task. Lanes report to you, never to each other, and never push or open PRs; you verify, integrate and hold the PR gate. Put the split (lanes, the paths each owns, acceptance checks) in `## Approach` before starting any; the mode rules above decide whether you wait for my go.
 
 Whatever the topology, agents talk through files (TASK.md, briefs, logs, commits, beads), not conversation, and any agent must be restartable from those files.
 
+## Long-running tasks
+
+`TASK.md` is the spec (what should be true when done); `git log` in the worktree is the progress (what's actually done). The delta is the remaining work; don't rely on conversation memory across sessions. `TASK.md` Status can drift: GitHub is the source of truth for issue and PR state. The `workspace` skill has how to resume an in-progress task.
+
+Before `/clear`, or when wrapping up an unfinished task, update `TASK.md` only with what was decided or learned in chat and isn't in the spec or commits: tried X and abandoned it because Y, an Approach pivot, uncommitted partial work. Don't write a per-step progress journal; it drifts and starts lying. Commits and tests are the honest signal.
+
+If I've added a `## Log` or `## Decisions` section to `TASK.md`, it's append-only and yours to write; `## Goal` and `## Approach` are mine, so ask before touching them.
+
 ## Living docs
 
-These instructions are not frozen. If a recurring friction or a missing rule becomes obvious while working, offer to restructure `CLAUDE.md` or a task's `TASK.md` to capture it — don't just work around it silently. Same for `TASK.md` when the spec is unclear or stale: suggest rewriting the spec before iterating on the code.
+These instructions aren't frozen. When a recurring friction or a missing rule becomes obvious, offer to restructure this file or a task's `TASK.md` instead of working around it. Same when a spec is unclear or stale: suggest rewriting it before iterating on the code.
 
-## Long-running tasks (context spans multiple sessions)
+## Never without asking
 
-For any task likely to outlive a single Claude session, treat **`TASK.md` as the spec** (what should be true when done) and **`git log` in the worktree as the progress log** (what's actually done). The delta between them is the remaining work. Do not rely on in-conversation memory across sessions.
-
-**On bootstrap into an in-progress task** (TASK.md exists, worktree exists, commits ahead of the default branch):
-
-1. Read `TASK.md`.
-2. In the `.tmp` worktree, run `git log --oneline $(git merge-base HEAD origin/HEAD)..HEAD` and `git diff $(git merge-base HEAD origin/HEAD)...HEAD --stat`.
-3. If `<slug>/lanes/` exists, you are its coordinator now: check live lanes with `ListAgents` (or `claude agents --json --all --cwd ~/workspace/<slug>`), read each lane's latest `LOG.md` entry, and match them against the lane ids in TASK.md Status. Put your session name and `[ref]` in each brief as coordinator.
-4. Compute the spec-vs-committed delta and continue from there. If the spec is unclear, ask before guessing — don't redo work that's already committed.
-
-**Before `/clear` (or when wrapping a session on an unfinished task):** update `TASK.md` *only* if something decided or learned in chat isn't already captured in the spec or the commits — e.g. "tried X, abandoned because Y", an `## Approach` pivot, a Status bullet for uncommitted partial work. **Do not write a per-step progress journal** — it drifts and starts lying. Commits + tests are the only honest signal of completeness.
-
-**`## Log` / `## Decisions` sections in `TASK.md`:** if I've added one, treat it as **append-only** and never touch `## Goal` / `## Approach` without asking. The Log is yours to write to; the spec is mine.
-
-## Cleanup
-
-When a task's PR is merged (or the task is abandoned) and I say "clean up <slug>" / "close out <slug>":
-
-1. If the task ran lanes: list them with `claude agents --json --all --cwd ~/workspace/<slug>` and `claude rm <id>` each. Their `<repo>.<lane>.tmp` worktrees and `<slug>-<lane>` branches go in steps 2–3.
-2. `git -C ~/projects/<repo> worktree remove ~/workspace/<slug>/<repo>.tmp` (add `--force` only if I confirm uncommitted changes can go).
-3. `git -C ~/projects/<repo> branch -d <slug>` (or `-D` if I confirm).
-4. Remove `~/workspace/<slug>/` after showing me what's in it.
-
-Never delete a task folder or worktree without asking first.
-
-## Out of scope here
-
-When I'm in `~/workspace/`, don't edit my dotfiles, shell config, or anything outside this folder and the task worktrees unless I explicitly ask.
+- Delete a task folder, worktree or branch.
+- Edit my dotfiles, shell config, or anything outside this folder and the task worktrees.
