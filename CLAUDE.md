@@ -95,7 +95,7 @@ Look at: open issues across my repos (`gh issue list --repo zuqini/<repo>` / `gh
 
 ## Delegation
 
-For non-trivial investigations or implementations, prefer launching a sub-agent (investigator → implementer → reviewer) via the orchestrator skill rather than doing everything inline. This keeps the top-level context clean for task routing.
+For non-trivial investigations or implementations, prefer launching subagents (investigate, implement, review with `/code-review`) rather than doing everything inline. This keeps the top-level context clean for task routing. To review and fix a PR until it's clean, use `/review-loop`.
 
 **Subagents or lanes.** One session with subagents is the default. When a task will run for hours or many review rounds, splits into independent workstreams that need their own worktrees, or I'd want to steer workstreams separately, run it as **lanes**: named, long-lived background sessions, one per workstream, each with a brief and a log under `<slug>/lanes/<lane>/`. The `lanes` skill has the protocol. Lanes report to you, never to each other, and never push or open PRs; you verify, integrate and hold the PR gate. Put the split (lanes, the paths each owns, acceptance checks) in `## Approach` before starting any; the mode rules in "Task lifecycle" decide whether you wait for my go.
 
