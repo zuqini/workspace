@@ -16,6 +16,7 @@ How to drive the multi-tasking workflow defined in `./CLAUDE.md`.
 | Nothing specific | `what should I work on next?` — Claude scans open issues + existing workspace tasks + open PRs and suggests 2–3. |
 | Status check | `refresh task status` — Claude rebuilds a table of all tasks with live GitHub issue + PR state. |
 | A big task with independent workstreams (hours of work, many review rounds) | `run <slug> as lanes` — Claude puts the split in `## Approach`, then starts one named background session per workstream, each in its own worktree with a brief and a log. It verifies and integrates their work itself and still pauses before the PR. |
+| A PR to drive to a clean review | `/review-loop <PR URL>` — Claude loops `/code-review xhigh` → a fixer grades each finding and fixes criticals and should-fixes (one commit each, with a test) → re-review, until a round comes back clean. It stops early on stalls (default 6 rounds) and asks before pushing. To keep it going unattended (auto mode), start with `/goal run the review-loop skill on <PR URL>; done when a reply contains a line starting "REVIEW-LOOP DONE" or "REVIEW-LOOP STOPPED", or after 60 turns` instead. |
 | Done with a task | `clean up <slug>` — Claude removes the worktree, branch, and task folder (asks first). |
 
 ## The one mindset shift (this is the actual hack)
